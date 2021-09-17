@@ -6,11 +6,15 @@ using System.Threading.Tasks;
 
 namespace TagGame
 {
+
 	class Program
 	{
 		static void Main(string[] args)
 		{
-			var game = new Board(new List<byte> { 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15 });
+			//var game = new Board(new List<byte> { 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15 });
+			var game = new Board("123456789ABCDEF0");
+			//Console.WriteLine(game.Solvability());
+			Console.ReadKey();
 			while (true)
 			{
 				game.PrintOut();
@@ -25,13 +29,67 @@ namespace TagGame
 
 	class Board
 	{
-		List<byte> table;
-		byte i;
-		public Board(List<byte> t)
+		private int master;
+		private List<byte> table;
+		private byte i;
+
+		public List<byte> Table
+		{
+			get
+			{
+				return table;
+			}
+		}
+
+		public byte I
+		{
+			get
+			{
+				return i;
+			}
+		}
+
+		public int Master
+		{
+			get
+			{
+				return master;
+			}
+		}
+		public Board(List<byte> t, int mast = -1)
 		{
 			table = t;
-			i = table.Find(j => j == 0);
+			i = (byte)table.FindIndex(j => j == 0);
 		}
+
+		public Board(string t, int mast = -1)
+		{
+			table = new List<byte>();
+			foreach (char j in t)
+			{
+				table.Add((byte)hex2int(j));
+			}
+			i = (byte)table.FindIndex(j => j == 0);
+
+		}
+
+		public bool Solvability()
+		{
+			int inv = 0;
+			for (int i = 0; i < 16; i++)
+			{
+				if (table[i]!=0)
+					for (int j = 0; j < i; j++)
+						if (table[j] > table[i])
+							inv++;
+			}
+			for (int i = 0; i < 16; i++)
+				if (table[i] == 0)
+					inv += 1 + i / 4;
+
+			return (inv%2==0);
+		}
+
 		public void PrintOut()
 		{
 			for (int i = 0; i < 4; i++)
@@ -49,8 +107,7 @@ namespace TagGame
 					{
 						if (i >= 4)
 						{
-							Swap<byte>(table, i, i - 4);
-							i -= 4;
+							Up();
 							return true;
 						}
 						return false;
@@ -59,8 +116,7 @@ namespace TagGame
 					{
 						if (i <= 11)
 						{
-							Swap<byte>(table, i, i + 4);
-							i += 4;
+							Down();
 							return true;
 						}
 						return false;
@@ -69,8 +125,7 @@ namespace TagGame
 					{
 						if (i >= 1 && i%4!=0)
 						{
-							Swap<byte>(table, i, i-1);
-							i -= 1;
+							Left();
 							return true;
 						}
 						return false;
@@ -79,8 +134,7 @@ namespace TagGame
 					{
 						if (i <= 14 && (i-3)%4!=0)
 						{
-							Swap<byte>(table, i, i + 1);
-							i += 1;
+							Right();
 							return true;
 						}
 						return false;
@@ -102,10 +156,70 @@ namespace TagGame
 			list[indexA] = list[indexB];
 			list[indexB] = tmp;
 		}
+
+		int hex2int(char ch)
+		{
+			if (ch >= '0' && ch <= '9')
+				return ch - '0';
+			if (ch >= 'A' && ch <= 'F')
+				return ch - 'A' + 10;
+			if (ch >= 'a' && ch <= 'f')
+				return ch - 'a' + 10;
+			return -1;
+		}
+
+		private void Up()
+		{
+			Swap<byte>(table, i, i - 4);
+			i -= 4;
+		}
+
+		private void Down()
+		{
+			Swap<byte>(table, i, i + 4);
+			i += 4;
+		}
+
+		private void Left()
+		{
+			Swap<byte>(table, i, i - 1);
+			i -= 1;
+		}
+
+		private void Right()
+		{
+			Swap<byte>(table, i, i + 1);
+			i += 1;
+		}
+
 	}
 
-	class Solution
+	class Solver
 	{
+		static string endres = "123456789ABCDEF0";
+		List<Board> used;
+
+		protected Solver()
+		{
+			used = new List<Board>();
+		}
+	}
+
+	class BFSSolver : Solver
+	{
+		Queue<Board> boards;
+
+		static BFSSolver Solve(Board start)
+		{
+			return new BFSSolver(start) ;
+		}
+
+		private BFSSolver(Board b) :base()
+		{
+			boards = new Queue<Board>();
+			boards.Enqueue(b);
+		}
+
 
 	}
 }
